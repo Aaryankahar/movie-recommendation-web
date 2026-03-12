@@ -62,17 +62,38 @@ export async function GET(request: NextRequest) {
 
   try {
     // Step 1: Get recommendations from ML backend
+    console.log(`[v0] Calling FastAPI at: ${FASTAPI_URL}/recommend?movie=${query}`);
+    
     const recommendResponse = await fetch(
-      `${FASTAPI_URL}/recommend?movie=${encodeURIComponent(query)}`
+      `${FASTAPI_URL}/recommend?movie=${encodeURIComponent(query)}`,
+      { signal: AbortSignal.timeout(10000) }
     );
 
     if (!recommendResponse.ok) {
-      console.error(`FastAPI error: ${recommendResponse.status} ${recommendResponse.statusText}`);
-      return NextResponse.json({ movies: [] });
+      console.error(`[v0] FastAPI error: ${recommendResponse.status} ${recommendResponse.statusText}`);
+      console.error(`[v0] Response body:`, await recommendResponse.text());
+      
+      // Return error message but don't crash
+      return NextResponse.json(
+        { 
+          error: `FastAPI endpoint returned ${recommendResponse.status}. Please verify the backend is running and the endpoint exists.`,
+          movies: [] 
+        },
+        { status: 200 }
+      );
     }
 
     const recommendData = await recommendResponse.json();
+    console.log(`[v0] FastAPI response:`, recommendData);
+    
     const recommendedTitles = recommendData.recommendations || [];
+
+    if (recommendedTitles.length === 0) {
+      return NextResponse.json({ 
+        movies: [],
+        message: 'No recommendations found for this movie'
+      });
+    }
 
     // Step 2: Fetch OMDb details asynchronously for all recommendations
     const moviePromises = recommendedTitles.map(async (fullTitle: string) => {
@@ -97,12 +118,16 @@ export async function GET(request: NextRequest) {
     const results = await Promise.all(moviePromises);
     const movies = results.filter((movie) => movie !== null);
 
+    console.log(`[v0] Successfully fetched ${movies.length} movies with posters`);
     return NextResponse.json({ movies });
   } catch (error) {
-    console.error('Search error:', error);
+    console.error(`[v0] Search error:`, error);
     return NextResponse.json(
-      { error: 'Failed to get recommendations' },
-      { status: 500 }
+      { 
+        error: `Failed to get recommendations: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        movies: [] 
+      },
+      { status: 200 }
     );
   }
 }
