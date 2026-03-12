@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Movie Recommendation System',
+  description: 'Discover personalized movie recommendations based on your favorite films',
   generator: 'v0.app',
   icons: {
     icon: [
