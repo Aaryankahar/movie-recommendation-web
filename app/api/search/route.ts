@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const FASTAPI_URL = 'https://nondestructive-proximately-delmar.ngrok-free.dev';
-const OMDB_API_KEY = '91302802';
+const FASTAPI_URL = process.env.FASTAPI_URL || 'https://movie-recommendation-api-pc9g.onrender.com';
+const OMDB_API_KEY = process.env.OMDB_API_KEY || '91302802';
 const OMDB_API_URL = 'https://www.omdbapi.com/';
 
 // Parse MovieLens title format: "Title (YYYY)" -> { title: "Title", year: "YYYY" }
